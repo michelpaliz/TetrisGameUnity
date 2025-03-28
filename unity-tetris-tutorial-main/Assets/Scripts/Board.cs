@@ -53,6 +53,15 @@ public class Board : MonoBehaviour
         } else {
             GameOver();
         }
+
+        // 🧠 Make sure GestureListener always has the latest active piece
+        GestureListener gestureListener = FindObjectOfType<GestureListener>();
+        if (gestureListener != null)
+        {
+            gestureListener.playerPiece = activePiece;
+            Debug.Log("🔁 Synced new piece to GestureListener");
+        }
+
     }
 
     public void GameOver()

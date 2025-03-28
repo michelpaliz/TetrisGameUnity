@@ -104,7 +104,6 @@ public class GestureListener : MonoBehaviour
                                 playerPiece.HardDrop();
                                 break;
 
-
                             default:
                                 Debug.Log("❓ Unknown gesture command: " + command);
                                 break;

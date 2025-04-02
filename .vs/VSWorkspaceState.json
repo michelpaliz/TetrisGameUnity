@@ -3,8 +3,12 @@
     "",
     "\\unity-tetris",
     "\\unity-tetris\\Assets",
+    "\\unity-tetris\\Assets\\Audio",
+    "\\unity-tetris\\Assets\\Scripts",
+    "\\unity-tetris\\Assets\\Scripts\\Intro",
+    "\\unity-tetris\\Assets\\Scripts\\UI",
     "\\unity-tetris\\Docs"
   ],
-  "SelectedNode": "\\unity-tetris\\Docs\\Board.md",
+  "SelectedNode": "\\unity-tetris\\Assets\\Scripts\\UI",
   "PreviewInSolutionExplorer": false
 }

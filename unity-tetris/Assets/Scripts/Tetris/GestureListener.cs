@@ -4,133 +4,199 @@ using System.Text;
 using System.Threading;
 using UnityEngine;
 using PimDeWitte.UnityMainThreadDispatcher;
+using System;
 
 public class GestureListener : MonoBehaviour
 {
     private TcpListener listener;
     private Thread listenerThread;
+    private bool isListening = false;
+    private readonly object lockObject = new object(); // For thread safety
 
     [HideInInspector]
     public Piece playerPiece;
 
-
     void Start()
     {
-        Debug.Log("🟢 GestureListener is active. Listening on port 5050...");
-        listenerThread = new Thread(ListenForCommands);
-        listenerThread.IsBackground = true;
-        listenerThread.Start();
+        StartListening();
     }
 
-    void Update()
+    public void StartListening()
     {
-        // Auto-assign piece if not manually linked
-        //if (playerPiece == null)
-        //{
-        //    playerPiece = FindObjectOfType<Piece>();
-        //}
+        lock (lockObject)
+        {
+            if (isListening) return;
+
+            Debug.Log("🟢 GestureListener is active. Listening on port 5050...");
+            listenerThread = new Thread(ListenForCommands);
+            listenerThread.IsBackground = true;
+            listenerThread.Start();
+            isListening = true;
+        }
+    }
+
+    public void StopListening()
+    {
+        lock (lockObject)
+        {
+            if (!isListening) return;
+
+            Debug.Log("🔴 GestureListener is stopping...");
+            isListening = false;
+
+            try
+            {
+                listener?.Stop();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("❌ Error stopping listener: " + ex.Message);
+            }
+
+            listener = null;
+
+            if (listenerThread != null && listenerThread.IsAlive)
+            {
+                listenerThread.Join(1000); // Wait up to 1 second
+                if (listenerThread.IsAlive)
+                {
+                    Debug.LogWarning("⚠️ Listener thread did not exit cleanly, aborting...");
+                    listenerThread.Abort(); // Force terminate (use cautiously)
+                }
+                listenerThread = null;
+            }
+        }
     }
 
     void ListenForCommands()
     {
-        listener = new TcpListener(IPAddress.Any, 5050);
-        listener.Start();
-
-        while (true)
+        try
         {
-            try
+            lock (lockObject)
             {
-                using (var client = listener.AcceptTcpClient())
-                using (var stream = client.GetStream())
+                listener = new TcpListener(IPAddress.Any, 5050);
+                listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                listener.Start();
+            }
+
+            while (isListening)
+            {
+                try
                 {
-                    byte[] buffer = new byte[256];
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    string command = Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
-
-                    Debug.Log("📨 Received: " + command);
-
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    if (!listener.Pending())
                     {
-                        // Double-check playerPiece is available
-                        if (playerPiece == null)
+                        Thread.Sleep(100); // Prevent tight loop when idle
+                        continue;
+                    }
+
+                    using (var client = listener.AcceptTcpClient())
+                    using (var stream = client.GetStream())
+                    {
+                        byte[] buffer = new byte[256];
+                        int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                        string command = Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
+
+                        Debug.Log("📨 Received: " + command);
+
+                        try
                         {
-                            playerPiece = FindObjectOfType<Piece>();
-                            if (playerPiece == null)
+                            UnityMainThreadDispatcher.Instance().Enqueue(() =>
                             {
-                                Debug.LogWarning("⚠️ playerPiece is null — skipping command: " + command);
-                                return;
-                            }
-                        }
+                                if (playerPiece == null)
+                                {
+                                    playerPiece = FindObjectOfType<Piece>();
+                                    if (playerPiece == null)
+                                    {
+                                        Debug.LogWarning("⚠️ playerPiece is null — skipping command: " + command);
+                                        return;
+                                    }
+                                }
 
-                        switch (command)
+                                HandleCommand(command);
+                            });
+                        }
+                        catch (Exception ex)
                         {
-                            case "MOVE_LEFT":
-                                Debug.Log("🎯 MOVE_LEFT triggered via gesture");
-                                playerPiece.board.Clear(playerPiece);
-                                if (playerPiece.Move(Vector2Int.left))
-                                {
-                                    playerPiece.board.Set(playerPiece); // ✅ Force visual update
-                                }
-                                break;
-
-                            case "MOVE_RIGHT":
-                                Debug.Log("🎯 MOVE_RIGHT triggered via gesture");
-                                playerPiece.board.Clear(playerPiece);
-                                if (playerPiece.Move(Vector2Int.right))
-                                {
-                                    playerPiece.board.Set(playerPiece); // ✅ Force visual update
-                                }
-                                break;
-
-                            case "SOFT_DROP":
-                                Debug.Log("📉SOFT_DROP triggered via gesture");
-                                playerPiece.board.Clear(playerPiece);
-                                if (playerPiece.Move(Vector2Int.down))
-                                {
-                                    playerPiece.board.Set(playerPiece);
-                                }
-                                break;
-
-                            case "ROTATE":
-                                Debug.Log("🔄 ROTATE triggered via gesture");
-                                playerPiece.board.Clear(playerPiece);
-                                playerPiece.Rotate(1);
-                                playerPiece.board.Set(playerPiece);
-                                break;
-
-                            case "HARD_DROP":
-                                Debug.Log("💥 HARD_DROP triggered via gesture");
-                                playerPiece.board.Clear(playerPiece);
-                                playerPiece.HardDrop();
-                                break;
-
-                            default:
-                                Debug.Log("❓ Unknown gesture command: " + command);
-                                break;
+                            Debug.LogWarning($"⚠️ Could not enqueue command — dispatcher might be missing. Skipped: {command}\n{ex.Message}");
                         }
-                    });
+                    }
+                }
+                catch (SocketException ex)
+                {
+                    if (isListening)
+                        Debug.LogError("❌ Socket error in client handling: " + ex.Message);
                 }
             }
-            catch (SocketException ex)
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("❌ Listener thread crashed: " + ex.Message);
+        }
+        finally
+        {
+            lock (lockObject)
             {
-                Debug.LogError("❌ Socket error: " + ex.Message);
+                if (listener != null)
+                {
+                    listener.Stop();
+                    listener = null;
+                }
+
+                isListening = false;
             }
+        }
+    }
+
+    private void HandleCommand(string command)
+    {
+        Board board = FindObjectOfType<Board>();
+        if (board == null || board.IsGameOver) return; // Ignore commands if game is over
+
+        switch (command)
+        {
+
+            case "MOVE_LEFT":
+                Debug.Log("🎯 MOVE_LEFT triggered via gesture");
+                playerPiece.board.Clear(playerPiece);
+                if (playerPiece.Move(Vector2Int.left))
+                    playerPiece.board.Set(playerPiece);
+                break;
+
+            case "MOVE_RIGHT":
+                Debug.Log("🎯 MOVE_RIGHT triggered via gesture");
+                playerPiece.board.Clear(playerPiece);
+                if (playerPiece.Move(Vector2Int.right))
+                    playerPiece.board.Set(playerPiece);
+                break;
+
+            case "SOFT_DROP":
+                Debug.Log("📉 SOFT_DROP triggered via gesture");
+                playerPiece.board.Clear(playerPiece);
+                if (playerPiece.Move(Vector2Int.down))
+                    playerPiece.board.Set(playerPiece);
+                break;
+
+            case "ROTATE":
+                Debug.Log("🔄 ROTATE triggered via gesture");
+                playerPiece.board.Clear(playerPiece);
+                playerPiece.Rotate(1);
+                playerPiece.board.Set(playerPiece);
+                break;
+
+            case "HARD_DROP":
+                Debug.Log("💥 HARD_DROP triggered via gesture");
+                playerPiece.board.Clear(playerPiece);
+                playerPiece.HardDrop();
+                break;
+
+            default:
+                Debug.Log("❓ Unknown gesture command: " + command);
+                break;
         }
     }
 
     void OnApplicationQuit()
     {
-        if (listener != null)
-        {
-            listener.Stop();
-            listener = null;
-        }
-
-        if (listenerThread != null && listenerThread.IsAlive)
-        {
-            listenerThread.Abort(); // optional, or use a cancellation token instead for safety
-            listenerThread = null;
-        }
+        StopListening();
     }
-
 }

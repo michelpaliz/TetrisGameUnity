@@ -49,33 +49,6 @@ public partial class Piece : MonoBehaviour
         board.Set(this);
     }
 
-    // === Initialization ===
-    //public void Initialize(Board board, Vector3Int position, TetrominoData data)
-    //{
-
-
-    //    this.board = board;
-    //    this.position = position;
-    //    this.data = data;
-
-    //    rotationIndex = 0;
-    //    stepTime = Time.time + stepDelay;
-    //    moveTime = Time.time + moveDelay;
-    //    lockTime = 0f;
-    //    isLocked = false;
-
-    //    //if (cells == null)
-    //    //    cells = new Vector3Int[data.cells.Length];
-
-    //    //for (int i = 0; i < cells.Length; i++)
-    //    //    cells[i] = (Vector3Int)data.cells[i];
-
-    //    GestureListener gestureListener = FindObjectOfType<GestureListener>();
-    //    if (gestureListener != null)
-    //        gestureListener.playerPiece = this;
-    //}
-
-
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
         this.board = board;

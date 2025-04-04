@@ -3,6 +3,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using PimDeWitte.UnityMainThreadDispatcher;
+using System.Collections;
 
 
 [DefaultExecutionOrder(-1)]
@@ -114,41 +115,71 @@ public partial class Board : MonoBehaviour
         }
     }
 
+    //public void GameOver()
+    //{
+    //    //// Save score
+
+    //    string playerName = PlayerNameManager.LoadName();
+    //    PlayerNameManager.SaveScore(playerName, score);
+
+
+    //    // Stop the game by setting the time scale to 0
+    //    Time.timeScale = 0;
+
+    //    // Clear the board and display Game Over message
+    //    tilemap.ClearAllTiles();
+
+    //    if (gameOverText != null)
+    //    {
+    //        gameOverText.enabled = true;  // Show Game Over UI text
+    //    }
+
+    //    // Play Game Over sound
+    //    if (gameOverSound != null)
+    //    {
+    //        AudioSource.PlayClipAtPoint(gameOverSound, Camera.main.transform.position, 1f);
+    //    }
+
+    //    // Stop listening for gestures when the game is over
+    //    GestureListener gestureListener = FindObjectOfType<GestureListener>();
+    //    if (gestureListener != null)
+    //    {
+    //        gestureListener.StopListening();
+    //    }
+
+    //    Debug.Log("Game Over! Press 'R' to restart.");
+    //    isGameOver = true;  // Mark the game as over
+    //}
+
     public void GameOver()
     {
-        //// Save score
-       
         string playerName = PlayerNameManager.LoadName();
         PlayerNameManager.SaveScore(playerName, score);
 
-
-        // Stop the game by setting the time scale to 0
-        Time.timeScale = 0;
-
-        // Clear the board and display Game Over message
         tilemap.ClearAllTiles();
+        if (gameOverText != null) gameOverText.enabled = true;
 
-        if (gameOverText != null)
-        {
-            gameOverText.enabled = true;  // Show Game Over UI text
-        }
-
-        // Play Game Over sound
         if (gameOverSound != null)
-        {
             AudioSource.PlayClipAtPoint(gameOverSound, Camera.main.transform.position, 1f);
-        }
 
-        // Stop listening for gestures when the game is over
         GestureListener gestureListener = FindObjectOfType<GestureListener>();
         if (gestureListener != null)
-        {
             gestureListener.StopListening();
-        }
 
-        Debug.Log("Game Over! Press 'R' to restart.");
-        isGameOver = true;  // Mark the game as over
+        isGameOver = true;
+
+        ShowReturnMessage(); // 🆕 show the font message
+        StartCoroutine(ReturnToIntroAfterDelay(5f));
     }
+
+
+    private IEnumerator ReturnToIntroAfterDelay(float delay)
+    {
+        yield return new WaitForSecondsRealtime(delay); // ⏳ unaffected by timeScale
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Intro");
+    }
+
 
 
     public void Restart()

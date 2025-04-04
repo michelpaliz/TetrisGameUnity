@@ -113,6 +113,19 @@ public partial class Piece : MonoBehaviour
     }
 
     // === Locking & Finalization ===
+    //private void Lock()
+    //{
+    //    if (isLocked) return;
+    //    isLocked = true;
+
+    //    if (lockSound)
+    //        AudioSource.PlayClipAtPoint(lockSound, Camera.main.transform.position, 1f);
+
+    //    board.Set(this);
+    //    board.ClearLines();
+    //    board.SpawnPiece();
+    //}
+
     private void Lock()
     {
         if (isLocked) return;
@@ -124,7 +137,13 @@ public partial class Piece : MonoBehaviour
         board.Set(this);
         board.ClearLines();
         board.SpawnPiece();
+
+        // 🔄 Refresh the reference in GestureListener
+        var gesture = FindObjectOfType<GestureListener>();
+        if (gesture != null)
+            gesture.playerPiece = FindObjectOfType<Piece>();
     }
+
 
     // === Movement Core ===
     public bool Move(Vector2Int translation)

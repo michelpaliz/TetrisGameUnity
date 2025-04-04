@@ -7,6 +7,7 @@ public partial class Board : MonoBehaviour
     private GameObject canvasGO;
     private TextMeshProUGUI scoreText;
     private TextMeshProUGUI gameOverText;
+    private TextMeshProUGUI returnText;
 
     // 🆕 Assign these in the Inspector or load dynamically if needed
     public TMP_FontAsset scoreFont;
@@ -26,20 +27,19 @@ public partial class Board : MonoBehaviour
         GameObject textGO = new GameObject("ScoreText", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(canvasGO.transform, false);
         RectTransform rect = textGO.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(1, 1);
-        rect.anchorMax = new Vector2(1, 1);
-        rect.pivot = new Vector2(1, 1);
-        rect.anchoredPosition = new Vector2(-50, -50);
-        rect.sizeDelta = new Vector2(300, 60);
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = new Vector2(0, -60); // Below top center
+        rect.sizeDelta = new Vector2(800, 100);
 
         scoreText = textGO.GetComponent<TextMeshProUGUI>();
-        scoreText.font = scoreFont; // 🔥 drag `simple_text` here
-        scoreText.fontSize = 36;
-        scoreText.alignment = TextAlignmentOptions.Right;
-        scoreText.color = Color.white;
+        scoreText.font = scoreFont;
+        scoreText.fontSize = 48;                      // 🆙 Bigger
+        scoreText.alignment = TextAlignmentOptions.Center;
+        scoreText.color = Color.black;                // 🖤 Dark font
         scoreText.text = $"Score: {score}";
 
-        // === Game Over Text ===
         CreateGameOverText();
     }
 
@@ -62,6 +62,27 @@ public partial class Board : MonoBehaviour
         gameOverText.color = Color.red;
         gameOverText.text = "GAME OVER";
         gameOverText.enabled = false;
+    }
+
+
+    private void ShowReturnMessage()
+    {
+        GameObject textGO = new GameObject("ReturnMessage", typeof(TextMeshProUGUI));
+        textGO.transform.SetParent(canvasGO.transform, false);
+
+        RectTransform rect = textGO.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0, -100);  // ⬇ slightly under "GAME OVER"
+        rect.sizeDelta = new Vector2(800, 100);
+
+        returnText = textGO.GetComponent<TextMeshProUGUI>();
+        returnText.font = gameOverFont; // 👈 same style as game over
+        returnText.fontSize = 36;
+        returnText.alignment = TextAlignmentOptions.Center;
+        returnText.color = Color.yellow;
+        returnText.text = "Returning to Intro...";
     }
 
     private void UpdateScoreUI()

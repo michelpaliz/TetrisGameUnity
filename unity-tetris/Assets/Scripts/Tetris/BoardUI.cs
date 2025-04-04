@@ -1,11 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public partial class Board : MonoBehaviour
 {
     private GameObject canvasGO;
-    private Text scoreText;
-    private Text gameOverText;
+    private TextMeshProUGUI scoreText;
+    private TextMeshProUGUI gameOverText;
+
+    // 🆕 Assign these in the Inspector or load dynamically if needed
+    public TMP_FontAsset scoreFont;
+    public TMP_FontAsset gameOverFont;
 
     private void CreateScoreUI()
     {
@@ -17,8 +22,8 @@ public partial class Board : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
 
-        // Score Text
-        GameObject textGO = new GameObject("ScoreText", typeof(Text));
+        // === Score Text ===
+        GameObject textGO = new GameObject("ScoreText", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(canvasGO.transform, false);
         RectTransform rect = textGO.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(1, 1);
@@ -27,20 +32,20 @@ public partial class Board : MonoBehaviour
         rect.anchoredPosition = new Vector2(-50, -50);
         rect.sizeDelta = new Vector2(300, 60);
 
-        scoreText = textGO.GetComponent<Text>();
-        scoreText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        scoreText = textGO.GetComponent<TextMeshProUGUI>();
+        scoreText.font = scoreFont; // 🔥 drag `simple_text` here
         scoreText.fontSize = 36;
-        scoreText.alignment = TextAnchor.MiddleRight;
+        scoreText.alignment = TextAlignmentOptions.Right;
         scoreText.color = Color.white;
         scoreText.text = $"Score: {score}";
 
-        // Game Over Text
+        // === Game Over Text ===
         CreateGameOverText();
     }
 
     private void CreateGameOverText()
     {
-        GameObject textGO = new GameObject("GameOverText", typeof(Text));
+        GameObject textGO = new GameObject("GameOverText", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(canvasGO.transform, false);
 
         RectTransform rect = textGO.GetComponent<RectTransform>();
@@ -50,10 +55,10 @@ public partial class Board : MonoBehaviour
         rect.anchoredPosition = Vector2.zero;
         rect.sizeDelta = new Vector2(600, 150);
 
-        gameOverText = textGO.GetComponent<Text>();
-        gameOverText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        gameOverText = textGO.GetComponent<TextMeshProUGUI>();
+        gameOverText.font = gameOverFont; // 🔥 drag `main_title` here
         gameOverText.fontSize = 64;
-        gameOverText.alignment = TextAnchor.MiddleCenter;
+        gameOverText.alignment = TextAlignmentOptions.Center;
         gameOverText.color = Color.red;
         gameOverText.text = "GAME OVER";
         gameOverText.enabled = false;

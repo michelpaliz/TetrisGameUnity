@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using PimDeWitte.UnityMainThreadDispatcher;
 
 
-
 [DefaultExecutionOrder(-1)]
 public partial class Board : MonoBehaviour
 {
@@ -83,9 +82,17 @@ public partial class Board : MonoBehaviour
 
         lineClearSound = Resources.Load<AudioClip>("Audio/line-clear");
         gameOverSound = Resources.Load<AudioClip>("Audio/game-over");
+        CreateVideoLayer();
         CreateScoreUI();   // From BoardUI.cs
         SpawnPiece();      // Start game with first piece
     }
+
+    private void CreateVideoLayer()
+    {
+        GameObject videoGO = new GameObject("VideoBackground");
+        videoGO.AddComponent<VideoBackground>(); // ✅ use your external component
+    }
+
 
     public void SpawnPiece()
     {
@@ -199,5 +206,12 @@ public partial class Board : MonoBehaviour
         {
             Restart();  // Restart the game when 'R' is pressed
         }
+
+        if (isGameOver && Input.GetKeyDown(KeyCode.B))
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("Intro");  // Go back to Intro scene
+        }
     }
+
 }

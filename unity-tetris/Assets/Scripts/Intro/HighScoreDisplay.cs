@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 using System.Linq;
+using UnityEngine.UI;
 using PimDeWitte.UnityMainThreadDispatcher;
-
 
 public class HighScoreDisplay : MonoBehaviour
 {
+    private static GameObject currentPanel;
+
     public static void ShowTop5()
     {
         var allData = PlayerNameManager.LoadAll();
@@ -15,13 +17,6 @@ public class HighScoreDisplay : MonoBehaviour
             .Take(5)
             .ToList();
 
-        string leaderboard = "🏆 TOP 5 PLAYERS\n";
-        for (int i = 0; i < topPlayers.Count; i++)
-        {
-            leaderboard += $"{i + 1}. {topPlayers[i].name} - {topPlayers[i].score}\n";
-        }
-
-        // ✅ Create or reuse a Text element to show the leaderboard
         GameObject canvasGO = GameObject.Find("Canvas");
         if (canvasGO == null)
         {
@@ -29,30 +24,51 @@ public class HighScoreDisplay : MonoBehaviour
             return;
         }
 
-        // Remove old leaderboard if exists
-        Transform existing = canvasGO.transform.Find("LeaderboardText");
-        if (existing != null)
+        // Destroy previous panel
+        if (currentPanel != null)
         {
-            GameObject.Destroy(existing.gameObject);
+            GameObject.Destroy(currentPanel);
         }
 
-        GameObject leaderboardGO = new GameObject("LeaderboardText", typeof(Text));
-        leaderboardGO.transform.SetParent(canvasGO.transform, false);
+        // === Panel ===
+        GameObject panelGO = new GameObject("ScorePanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        panelGO.transform.SetParent(canvasGO.transform, false);
+        Image panelImage = panelGO.GetComponent<Image>();
+        panelImage.color = new Color(0f, 0f, 0f, 0.75f); // semi-transparent
 
-        RectTransform rect = leaderboardGO.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0, 200);
-        rect.sizeDelta = new Vector2(600, 300);
+        RectTransform panelRect = panelGO.GetComponent<RectTransform>();
+        panelRect.sizeDelta = new Vector2(500, 300);
+        panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        panelRect.pivot = new Vector2(0.5f, 0.5f);
+        panelRect.anchoredPosition = Vector2.zero;
 
-        Text text = leaderboardGO.GetComponent<Text>();
-        text.text = leaderboard;
-        text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        text.fontSize = 24;
-        text.alignment = TextAnchor.UpperCenter;
-        text.color = Color.yellow;
+        currentPanel = panelGO; // Track reference
 
-        Debug.Log("✅ Leaderboard shown on screen.");
+        // === TMP Text ===
+        GameObject textGO = new GameObject("TopScoresText", typeof(TextMeshProUGUI));
+        textGO.transform.SetParent(panelGO.transform, false);
+        TextMeshProUGUI tmpText = textGO.GetComponent<TextMeshProUGUI>();
+
+        RectTransform textRect = tmpText.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(20, 20);
+        textRect.offsetMax = new Vector2(-20, -20);
+
+        tmpText.fontSize = 32;
+        tmpText.alignment = TextAlignmentOptions.Center;
+        tmpText.color = Color.yellow;
+        tmpText.enableWordWrapping = true;
+
+        string leaderboard = "<b>🏆 TOP 5 PLAYERS</b>\n\n";
+        for (int i = 0; i < topPlayers.Count; i++)
+        {
+            leaderboard += $"{i + 1}. {topPlayers[i].name} - {topPlayers[i].score}\n";
+        }
+
+        tmpText.text = leaderboard;
+
+        // Add ESC key listener
+        panelGO.AddComponent<CloseOnEsc>();
     }
 }

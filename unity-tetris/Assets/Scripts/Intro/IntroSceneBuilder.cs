@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 using PimDeWitte.UnityMainThreadDispatcher;
-
 
 public class IntroSceneBuilder : MonoBehaviour
 {
     public Sprite backgroundImage;
-    public Font arcadeFont;
     public AudioClip introMusic;
 
+    // 🆕 Font assignments
+    public TMP_FontAsset titleFont;     // main_title
+    public TMP_FontAsset inputFont;     // simple_text
+    public TMP_FontAsset buttonFont;    // title_text
 
     void Start()
     {
@@ -41,25 +44,14 @@ public class IntroSceneBuilder : MonoBehaviour
             bgRect.anchorMax = Vector2.one;
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
-
             Image bgImage = bgGO.GetComponent<Image>();
             bgImage.sprite = backgroundImage;
             bgImage.preserveAspect = false;
             bgImage.color = Color.white;
         }
 
-        // === OVERLAY ===
-        GameObject overlayGO = new GameObject("Overlay", typeof(Image));
-        overlayGO.transform.SetParent(canvasGO.transform, false);
-        RectTransform overlayRect = overlayGO.GetComponent<RectTransform>();
-        overlayRect.anchorMin = Vector2.zero;
-        overlayRect.anchorMax = Vector2.one;
-        overlayRect.offsetMin = Vector2.zero;
-        overlayRect.offsetMax = Vector2.zero;
-        overlayGO.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.4f);
-
         // === TITLE ===
-        GameObject titleGO = new GameObject("Title", typeof(Text));
+        GameObject titleGO = new GameObject("Title", typeof(TextMeshProUGUI));
         titleGO.transform.SetParent(canvasGO.transform, false);
         RectTransform titleRect = titleGO.GetComponent<RectTransform>();
         titleRect.anchorMin = new Vector2(0.5f, 1f);
@@ -67,117 +59,115 @@ public class IntroSceneBuilder : MonoBehaviour
         titleRect.pivot = new Vector2(0.5f, 1f);
         titleRect.anchoredPosition = new Vector2(0, -100);
         titleRect.sizeDelta = new Vector2(800, 100);
-        Text title = titleGO.GetComponent<Text>();
+
+        TextMeshProUGUI title = titleGO.GetComponent<TextMeshProUGUI>();
         title.text = "TETRIS GAME";
-        title.font = arcadeFont ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+        title.font = titleFont;
         title.fontSize = 60;
-        title.alignment = TextAnchor.MiddleCenter;
+        title.alignment = TextAlignmentOptions.Center;
         title.color = Color.cyan;
+        title.enableAutoSizing = true;
 
         // === INPUT FIELD ===
-        GameObject inputGO = new GameObject("NameInput", typeof(Image), typeof(InputField));
+        GameObject inputGO = new GameObject("NameInput", typeof(Image), typeof(TMP_InputField));
         inputGO.transform.SetParent(canvasGO.transform, false);
         RectTransform inputRect = inputGO.GetComponent<RectTransform>();
         inputRect.sizeDelta = new Vector2(400, 60);
-        inputRect.anchorMin = new Vector2(0.5f, 0.5f);
-        inputRect.anchorMax = new Vector2(0.5f, 0.5f);
+        inputRect.anchorMin = inputRect.anchorMax = new Vector2(0.5f, 0.5f);
         inputRect.pivot = new Vector2(0.5f, 0.5f);
         inputRect.anchoredPosition = new Vector2(0, 50);
-        InputField inputField = inputGO.GetComponent<InputField>();
         Image inputImage = inputGO.GetComponent<Image>();
         inputImage.color = Color.white;
 
-        GameObject placeholderGO = new GameObject("Placeholder", typeof(Text));
-        placeholderGO.transform.SetParent(inputGO.transform, false);
-        Text placeholder = placeholderGO.GetComponent<Text>();
-        placeholder.text = "Enter your name...";
-        placeholder.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        placeholder.fontSize = 20;
-        placeholder.color = Color.gray;
-        placeholder.alignment = TextAnchor.MiddleCenter;
-        placeholder.rectTransform.anchorMin = Vector2.zero;
-        placeholder.rectTransform.anchorMax = Vector2.one;
-        placeholder.rectTransform.offsetMin = Vector2.zero;
-        placeholder.rectTransform.offsetMax = Vector2.zero;
-
-        GameObject inputTextGO = new GameObject("Text", typeof(Text));
+        // Input Text
+        GameObject inputTextGO = new GameObject("Text", typeof(TextMeshProUGUI));
         inputTextGO.transform.SetParent(inputGO.transform, false);
-        Text inputText = inputTextGO.GetComponent<Text>();
-        inputText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        inputText.fontSize = 24;
+        TextMeshProUGUI inputText = inputTextGO.GetComponent<TextMeshProUGUI>();
+        inputText.font = inputFont;
         inputText.color = Color.black;
-        inputText.alignment = TextAnchor.MiddleCenter;
+        inputText.enableAutoSizing = true;
+        inputText.alignment = TextAlignmentOptions.Center;
         inputText.rectTransform.anchorMin = Vector2.zero;
         inputText.rectTransform.anchorMax = Vector2.one;
         inputText.rectTransform.offsetMin = Vector2.zero;
         inputText.rectTransform.offsetMax = Vector2.zero;
 
+        // Placeholder
+        GameObject placeholderGO = new GameObject("Placeholder", typeof(TextMeshProUGUI));
+        placeholderGO.transform.SetParent(inputGO.transform, false);
+        TextMeshProUGUI placeholder = placeholderGO.GetComponent<TextMeshProUGUI>();
+        placeholder.text = "Enter your name...";
+        placeholder.font = inputFont;
+        placeholder.color = Color.gray;
+        placeholder.enableAutoSizing = true;
+        placeholder.alignment = TextAlignmentOptions.Center;
+        placeholder.rectTransform.anchorMin = Vector2.zero;
+        placeholder.rectTransform.anchorMax = Vector2.one;
+        placeholder.rectTransform.offsetMin = Vector2.zero;
+        placeholder.rectTransform.offsetMax = Vector2.zero;
+
+        TMP_InputField inputField = inputGO.GetComponent<TMP_InputField>();
         inputField.textComponent = inputText;
         inputField.placeholder = placeholder;
-
-        inputField.text = PlayerNameManager.LoadName(); // Pre-fill if exists
+        inputField.text = PlayerNameManager.LoadName();
 
         // === START BUTTON ===
         GameObject buttonGO = new GameObject("StartButton", typeof(Image), typeof(Button));
         buttonGO.transform.SetParent(canvasGO.transform, false);
         RectTransform btnRect = buttonGO.GetComponent<RectTransform>();
         btnRect.sizeDelta = new Vector2(300, 80);
-        btnRect.anchorMin = new Vector2(0.5f, 0.5f);
-        btnRect.anchorMax = new Vector2(0.5f, 0.5f);
+        btnRect.anchorMin = btnRect.anchorMax = new Vector2(0.5f, 0.5f);
         btnRect.pivot = new Vector2(0.5f, 0.5f);
         btnRect.anchoredPosition = new Vector2(0, -50);
         buttonGO.GetComponent<Image>().color = new Color(0.2f, 0.6f, 1f);
 
-        GameObject textGO = new GameObject("Text", typeof(Text));
+        GameObject textGO = new GameObject("Text", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(buttonGO.transform, false);
-        RectTransform textRect = textGO.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-        Text btnText = textGO.GetComponent<Text>();
+        TextMeshProUGUI btnText = textGO.GetComponent<TextMeshProUGUI>();
         btnText.text = "Start Game";
-        btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        btnText.fontSize = 30;
-        btnText.alignment = TextAnchor.MiddleCenter;
+        btnText.font = buttonFont;
         btnText.color = Color.white;
+        btnText.alignment = TextAlignmentOptions.Center;
+        btnText.enableAutoSizing = true;
+        btnText.fontSizeMin = 10;
+        btnText.fontSizeMax = 28;  // adjust as needed
 
-        // === BUTTON LOGIC ===
+        btnText.rectTransform.anchorMin = Vector2.zero;
+        btnText.rectTransform.anchorMax = Vector2.one;
+        btnText.rectTransform.offsetMin = Vector2.zero;
+        btnText.rectTransform.offsetMax = Vector2.zero;
+
         IntroManager introScript = buttonGO.AddComponent<IntroManager>();
         Button button = buttonGO.GetComponent<Button>();
         button.onClick.AddListener(introScript.StartGame);
 
-        // === SHOW SCORES BUTTON ===
-        GameObject scoreButtonGO = new GameObject("HighScoreDisplay", typeof(Image), typeof(Button));
-        scoreButtonGO.transform.SetParent(canvasGO.transform, false);
-
-        RectTransform scoreBtnRect = scoreButtonGO.GetComponent<RectTransform>();
+        // === HIGH SCORES BUTTON ===
+        GameObject scoreBtnGO = new GameObject("ShowScoresButton", typeof(Image), typeof(Button));
+        scoreBtnGO.transform.SetParent(canvasGO.transform, false);
+        RectTransform scoreBtnRect = scoreBtnGO.GetComponent<RectTransform>();
         scoreBtnRect.sizeDelta = new Vector2(300, 80);
-        scoreBtnRect.anchorMin = new Vector2(0.5f, 0.5f);
-        scoreBtnRect.anchorMax = new Vector2(0.5f, 0.5f);
+        scoreBtnRect.anchorMin = scoreBtnRect.anchorMax = new Vector2(0.5f, 0.5f);
         scoreBtnRect.pivot = new Vector2(0.5f, 0.5f);
-        scoreBtnRect.anchoredPosition = new Vector2(0, -150); // Offset lower than Start button
+        scoreBtnRect.anchoredPosition = new Vector2(0, -150);
+        scoreBtnGO.GetComponent<Image>().color = new Color(1f, 0.5f, 0.1f);
 
-        Image scoreBtnImage = scoreButtonGO.GetComponent<Image>();
-        scoreBtnImage.color = new Color(1f, 0.6f, 0.2f); // Orange-ish
+        GameObject scoreTextGO = new GameObject("Text", typeof(TextMeshProUGUI));
+        scoreTextGO.transform.SetParent(scoreBtnGO.transform, false);
+        TextMeshProUGUI scoreText = scoreTextGO.GetComponent<TextMeshProUGUI>();
+        scoreText.text = "Top Scores";
+        scoreText.font = buttonFont;
+        scoreText.color = Color.white;
+        scoreText.alignment = TextAlignmentOptions.Center;
+        //scoreText.enableAutoSizing = true;
+        scoreText.enableAutoSizing = true;
+        scoreText.fontSizeMin = 10;
+        scoreText.fontSizeMax = 28;  // adjust as 
+        scoreText.rectTransform.anchorMin = Vector2.zero;
+        scoreText.rectTransform.anchorMax = Vector2.one;
+        scoreText.rectTransform.offsetMin = Vector2.zero;
+        scoreText.rectTransform.offsetMax = Vector2.zero;
 
-        GameObject scoreTextGO = new GameObject("Text", typeof(Text));
-        scoreTextGO.transform.SetParent(scoreButtonGO.transform, false);
-        RectTransform scoreTextRect = scoreTextGO.GetComponent<RectTransform>();
-        scoreTextRect.anchorMin = Vector2.zero;
-        scoreTextRect.anchorMax = Vector2.one;
-        scoreTextRect.offsetMin = Vector2.zero;
-        scoreTextRect.offsetMax = Vector2.zero;
-
-        Text scoreBtnText = scoreTextGO.GetComponent<Text>();
-        scoreBtnText.text = "Show Top Scores";
-        scoreBtnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        scoreBtnText.fontSize = 26;
-        scoreBtnText.alignment = TextAnchor.MiddleCenter;
-        scoreBtnText.color = Color.white;
-
-        // === BUTTON FUNCTION ===
-        Button scoreButton = scoreButtonGO.GetComponent<Button>();
+        Button scoreButton = scoreBtnGO.GetComponent<Button>();
         scoreButton.onClick.AddListener(() => HighScoreDisplay.ShowTop5());
 
         // === EVENT SYSTEM ===

@@ -1,8 +1,11 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class HighScoresButtonSpawner : MonoBehaviour
 {
+    public TMP_FontAsset buttonFont; // 🎯 Drag simple_text, etc.
+
     void Start()
     {
         GameObject canvas = GameObject.Find("Canvas");
@@ -20,7 +23,8 @@ public class HighScoresButtonSpawner : MonoBehaviour
 
         buttonGO.GetComponent<Image>().color = new Color(0.2f, 0.6f, 1f);
 
-        GameObject textGO = new GameObject("Text", typeof(Text));
+        // === TMP Text ===
+        GameObject textGO = new GameObject("Text", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(buttonGO.transform, false);
 
         RectTransform textRect = textGO.GetComponent<RectTransform>();
@@ -29,12 +33,13 @@ public class HighScoresButtonSpawner : MonoBehaviour
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
 
-        Text btnText = textGO.GetComponent<Text>();
+        TextMeshProUGUI btnText = textGO.GetComponent<TextMeshProUGUI>();
         btnText.text = "Top 5 Scores";
-        btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        btnText.font = buttonFont;  // 🎯 Use your assigned TMP font
         btnText.fontSize = 24;
-        btnText.alignment = TextAnchor.MiddleCenter;
+        btnText.alignment = TextAlignmentOptions.Center;
         btnText.color = Color.white;
+        btnText.enableAutoSizing = true;
 
         Button button = buttonGO.GetComponent<Button>();
         button.onClick.AddListener(() =>

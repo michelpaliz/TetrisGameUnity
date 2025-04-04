@@ -2,6 +2,9 @@
 using UnityEngine.Tilemaps;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using PimDeWitte.UnityMainThreadDispatcher;
+
+
 
 [DefaultExecutionOrder(-1)]
 public partial class Board : MonoBehaviour
@@ -27,6 +30,7 @@ public partial class Board : MonoBehaviour
 
     // === Bounds Property ===
     public RectInt Bounds => new RectInt(new Vector2Int(-boardSize.x / 2, -boardSize.y / 2), boardSize);
+
 
     private void Awake()
     {
@@ -105,6 +109,12 @@ public partial class Board : MonoBehaviour
 
     public void GameOver()
     {
+        //// Save score
+       
+        string playerName = PlayerNameManager.LoadName();
+        PlayerNameManager.SaveScore(playerName, score);
+
+
         // Stop the game by setting the time scale to 0
         Time.timeScale = 0;
 
@@ -114,6 +124,12 @@ public partial class Board : MonoBehaviour
         if (gameOverText != null)
         {
             gameOverText.enabled = true;  // Show Game Over UI text
+        }
+
+        // Play Game Over sound
+        if (gameOverSound != null)
+        {
+            AudioSource.PlayClipAtPoint(gameOverSound, Camera.main.transform.position, 1f);
         }
 
         // Stop listening for gestures when the game is over
@@ -126,6 +142,7 @@ public partial class Board : MonoBehaviour
         Debug.Log("Game Over! Press 'R' to restart.");
         isGameOver = true;  // Mark the game as over
     }
+
 
     public void Restart()
     {
